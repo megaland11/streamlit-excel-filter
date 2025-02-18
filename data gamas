@@ -1,0 +1,34 @@
+import streamlit as st
+import pandas as pd
+import io
+
+st.title("Aplikasi Filter Data Excel")
+
+# Upload file Excel
+uploaded_file = st.file_uploader("Upload file Excel", type=["xlsx", "xls"])
+
+if uploaded_file:
+    df = pd.read_excel(uploaded_file)
+    st.write("### Data Awal", df)
+
+    # Pilih filter
+    column_to_filter = st.selectbox("Pilih Kolom", df.columns)
+    unique_values = df[column_to_filter].dropna().unique()
+    selected_value = st.selectbox("Pilih Nilai", unique_values)
+
+    # Filter data
+    filtered_df = df[df[column_to_filter] == selected_value]
+    st.write("### Data Terfilter", filtered_df)
+
+    # Download Excel
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+        filtered_df.to_excel(writer, index=False, sheet_name="Filtered Data")
+        writer.close()
+    
+    st.download_button(
+        label="Download Hasil Filter (Excel)",
+        data=output.getvalue(),
+        file_name="filtered_data.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
